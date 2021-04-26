@@ -1,5 +1,10 @@
+import m.util
 
 class Player:
+    upper_player = False
+    board_state = {}
+    considered_moves = {}
+
     def __init__(self, player):
         """
         Called once at the beginning of a game to initialise this player.
