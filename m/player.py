@@ -1,10 +1,6 @@
 import m.util
 
 class Player:
-    upper_player = False
-    board_state = {}
-    considered_moves = {}
-
     def __init__(self, player):
         """
         Called once at the beginning of a game to initialise this player.
@@ -14,7 +10,18 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        # put your code here
+        #setting player state
+        if (player == "lower"):
+            m.util.upper_player = False
+        
+        #Initialising an empty board
+        data = m.util.parse_json(m.util.EMPTY_JSON_PATH)
+        board_state = m.util.parse_board(data)
+
+        print("Initial player chosen:")
+        m.util.check_upper()
+
+        return
 
     def action(self):
         """
