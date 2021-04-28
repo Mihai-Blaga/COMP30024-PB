@@ -53,6 +53,6 @@ class Player:
         self.board_state = m.update.update_board(self.board_state, opponent_action, self.opponent)
         self.board_state = m.update.update_board(self.board_state, player_action, self.player_type)
 
-        m.update.resolve_collisions(self.board_state, opponent_action[2])
-        m.update.resolve_collisions(self.board_state, player_action[2])
+        self.board_state = m.update.resolve_collisions(self.board_state, opponent_action[2])
+        self.board_state = m.update.resolve_collisions(self.board_state, player_action[2])
 

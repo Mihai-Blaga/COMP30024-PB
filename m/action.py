@@ -4,6 +4,7 @@ Utility file containing all important components for choosing an action.
 
 import m.util
 import m.update
+import random
 
 attacker_proximity = 1  #weight for sum of closest attackers, prefer large
 target_proximity = 1    #weight for sum of closest targets, prefer small
@@ -101,6 +102,7 @@ def make_greedy_move(moves, state, player):
     opponent = m.util.calculate_opponent(player)
     min_score = 9999999
     greedy_move = ()
+    best_moves = []
     throw_token = "r"
 
     for key in moves:
@@ -122,13 +124,17 @@ def make_greedy_move(moves, state, player):
             
             #evaluate what would happen if this move is made
             evaluating_state = m.update.update_board(state, move, player)
-            m.update.resolve_collisions(evaluating_state, hex)
+            evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
             score = evaluate(evaluating_state, player)
             
             #keep best move
-            if (score < min_score):
+            if (score == min_score):
+                best_moves.append(move)
+            elif (score < min_score):
+                best_moves = [move]
                 min_score = score
-                greedy_move = move
+            
+    greedy_move = random.choice(best_moves)
 
     return greedy_move
 

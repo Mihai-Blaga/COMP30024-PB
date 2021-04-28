@@ -15,6 +15,7 @@ def update_board(state, move, player):
 
     if (move_type == "THROW"):
         board_state[player].append((before, after[0], after[1]))
+        board_state[player + "_throws"] = board_state[player + "_throws"] + 1
         return board_state
 
     for i in range(0, len(board_state[player])):
@@ -36,7 +37,8 @@ def resolve_collisions(state, hex):
 
     pieces_on_hex = list(set(pieces_on_hex))
 
-    #removes the pieces which would not survive being on the hex
+    #removes the pieces which would not survive being on the hex (might not be working)
+    #TODO: test this properly
     for piece in state["upper"]:
         if (piece[1] == hex[0] and piece[2] == hex[1]):
             for tile in pieces_on_hex:
@@ -48,3 +50,5 @@ def resolve_collisions(state, hex):
             for tile in pieces_on_hex:
                 if (not m.util.live_hex(hex[0], hex[1], piece[0], tile)):
                     state["lower"].remove(piece)
+
+    return state
