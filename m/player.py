@@ -1,6 +1,12 @@
 import m.util
+import m.action
+import m.update
 
 class Player:
+    player_type = "upper"
+    opponent = "lower"
+    board_state = {}
+
     def __init__(self, player):
         """
         Called once at the beginning of a game to initialise this player.
@@ -10,16 +16,15 @@ class Player:
         play as Upper), or the string "lower" (if the instance will play
         as Lower).
         """
-        #setting player state
-        if (player == "lower"):
-            m.util.upper_player = False
+        #setting player and opponent state
+        if (player == self.opponent):
+            self.opponent = self.player_type
+            self.player_type = player
         
         #Initialising an empty board
-        data = m.util.parse_json(m.util.EMPTY_JSON_PATH)
-        board_state = m.util.parse_board(data)
+        self.board_state = m.util.parse_json(m.util.EMPTY_JSON_PATH)
 
-        print("Initial player chosen:")
-        m.util.check_upper()
+        print("Initial player chosen:" + self.player_type)
 
         return
 
@@ -28,8 +33,11 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
-        # put your code here
-    
+        moves = m.util.legal_moves(self.board_state, self.player_type)
+        print("Moves for player: " + self.player_type)
+        print(moves)
+
+
     def update(self, opponent_action, player_action):
         """
         Called at the end of each turn to inform this player of both
@@ -38,5 +46,9 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-        # put your code here
+        m.update.update_board(self.board_state, opponent_action, self.opponent)
+        m.update.update_board(self.board_state, player_action, self.player_type)
+
+        m.update.resolve_collisions(self.board_state, opponent_action[2])
+        m.update.resolve_collisions(self.board_state, player_action[2])
 
