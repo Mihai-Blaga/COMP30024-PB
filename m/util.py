@@ -19,6 +19,12 @@ def valid_hex(r, q):
     maximum_val = min(4, 4-q)
     return ((minimum_val <= r) and (maximum_val >= r))
 
+def calculate_opponent(player):
+    opponent = "lower"
+    if player == "lower":
+        opponent = "upper"
+    return opponent
+
 def finished(state):
     """
     For a given board state, confirms it is in an accepted "finished" state based on absence of any lower pieces.

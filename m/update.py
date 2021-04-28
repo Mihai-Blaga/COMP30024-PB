@@ -2,25 +2,26 @@
 Utility file containing all important components for updating the board state.
 """
 import m.util
+import copy
 
 def update_board(state, move, player):
     """
     Given a board state, a move and a player, updates the internal version of the board.
     """
+    board_state = copy.deepcopy(state)
     move_type = move[0]
     before = move[1]
     after = move[2]
 
     if (move_type == "THROW"):
-        state[player].append(before, after[0], after[1])
-        return
+        board_state[player].append((before, after[0], after[1]))
+        return board_state
 
-    for i in range(0, len(state[player])):
-        piece = state[player][i]
+    for i in range(0, len(board_state[player])):
+        piece = board_state[player][i]
         if (piece[1] == before[0] and piece[2] == before[1]):
-            piece[1] = after[0]
-            piece[2] = after[1]
-            return
+            board_state[player][i] = (piece[0], after[0], after[1])
+            return board_state
 
 def resolve_collisions(state, hex):
     """

@@ -37,6 +37,10 @@ class Player:
         print("Moves for player: " + self.player_type)
         print(moves)
 
+        move = m.action.make_greedy_move(moves, self.board_state, self.player_type)
+        print("Making move: ", move)
+        return move
+
 
     def update(self, opponent_action, player_action):
         """
@@ -46,8 +50,8 @@ class Player:
         The parameter opponent_action is the opponent's chosen action,
         and player_action is this instance's latest chosen action.
         """
-        m.update.update_board(self.board_state, opponent_action, self.opponent)
-        m.update.update_board(self.board_state, player_action, self.player_type)
+        self.board_state = m.update.update_board(self.board_state, opponent_action, self.opponent)
+        self.board_state = m.update.update_board(self.board_state, player_action, self.player_type)
 
         m.update.resolve_collisions(self.board_state, opponent_action[2])
         m.update.resolve_collisions(self.board_state, player_action[2])
