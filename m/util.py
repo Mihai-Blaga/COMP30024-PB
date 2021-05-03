@@ -81,6 +81,7 @@ def legal_moves(state, player):
     Returns a list of all legal moves including throws. Format {movable_piece_num: [moves]}
     A throw is given a movable_piece_num of -1.
     """
+    print(state)
     legal_moves = adj_loc(state, player)
     throws_left = state[player + "_throws"]
 
@@ -116,7 +117,7 @@ def live_hex(r, q, target_piece, original_piece):
     target_piece = piece_map[target_piece]
 
     if (original_piece != -2 and target_piece != -2):
-        return not (((original_piece + 1) % 6) == target_piece or ((original_piece + 4) % 6) == target_piece)
+        return not ((((original_piece + 1) % 6) == target_piece) or (((original_piece + 4) % 6) == target_piece))
 
     return True
 

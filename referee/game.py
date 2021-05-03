@@ -116,7 +116,7 @@ def play(
     player_1, player_2 = players
     while not game.over():
         comment(f"Turn {turn}", depth=-1)
-
+        input("Press Enter to continue...")
         # Ask both players for their next action (calling .action() methods)
         action_1 = player_1.action()
         action_2 = player_2.action()
