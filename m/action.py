@@ -167,17 +167,16 @@ def evaluate(state, player):
     return score
 
 def make_greedy_move(moves, state, player):
-    opponent = m.util.calculate_opponent(player)
     max_score = -9999999
     greedy_move = ()
     best_moves = []
-    #throw_token = "r"
     throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
     for key in moves:
         possible = moves[key]
         for hex in possible:
             """
+            opponent = m.util.calculate_opponent(player)
             #pick throw token based on closest opposing player
             if (key == -1 and len(state[opponent]) != 0):
                 min_dist = 10
@@ -208,6 +207,20 @@ def make_greedy_move(moves, state, player):
     greedy_move = random.choice(best_moves)
 
     return greedy_move
+
+def make_random_move(moves, state, player):
+    #makes a random choice of which piece to move and a random choice of where to move it.
+    throw_conversion = {-1:"r", -2:"p", -3:"s"}
+
+    key = random.choice(list(moves.keys()))
+    hex = random.choice(moves[key])
+
+    if (key < 0):
+        move = output_move(key, throw_conversion[key], hex)
+    else:   
+        move = output_move(key, (state[player][key][1], state[player][key][2]), hex)
+
+    return move
 
 def output_move(piece, orig, final):
     if (piece < 0):

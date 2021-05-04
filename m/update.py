@@ -48,7 +48,7 @@ def resolve_collisions(state, hex, p = False):
                     if p:
                         print("removing upper piece from list:")
                         print(piece)
-                    state["upper"].remove(piece)
+                    state["upper"] = [p for p in state["upper"] if p != piece]
                     if p:
                         print("new list")
                         print(state)
@@ -60,7 +60,7 @@ def resolve_collisions(state, hex, p = False):
                     if p:
                         print("removing lower piece from list:")
                         print(piece)
-                    state["lower"].remove(piece)
+                    state["lower"] = [p for p in state["lower"] if p != piece]
                     if p:
                         print("new list")
                         print(state)
