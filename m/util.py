@@ -94,16 +94,19 @@ def legal_moves(state, player):
         if (player == "upper"):
             lower = (lower + throws_left) - 1
     
-    throws = []
-    for i in range(lower, upper + 1):
-        for j in range (-4, 5):
-            if (valid_hex(i,j)):
-                throws.append((i,j))
+        throws = []
+        for i in range(lower, upper + 1):
+            for j in range (-4, 5):
+                if (valid_hex(i,j)):
+                    throws.append((i,j))
     
-    legal_moves[-1] = throws
+        legal_moves[-1] = throws
+        legal_moves[-2] = throws
+        legal_moves[-3] = throws
+        
     return legal_moves
 
-def live_hex(r, q, target_piece, original_piece):
+def live_hex(r, q, moving_piece, original_piece):
     """
     returns true if the target piece will survive moving to the specified hex
     """
@@ -114,10 +117,10 @@ def live_hex(r, q, target_piece, original_piece):
         return False
 
     original_piece = piece_map[original_piece]
-    target_piece = piece_map[target_piece]
+    moving_piece = piece_map[moving_piece]
 
-    if (original_piece != -2 and target_piece != -2):
-        return not ((((original_piece + 1) % 6) == target_piece) or (((original_piece + 4) % 6) == target_piece))
+    if (original_piece != -2 and moving_piece != -2):
+        return not ((((moving_piece + 1) % 6) == original_piece) or (((moving_piece + 4) % 6) == original_piece))
 
     return True
 

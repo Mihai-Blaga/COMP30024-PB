@@ -24,6 +24,13 @@ t_c = 1
 no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 
+DEBUG = False #set to TRUE if you want output for code in action.
+
+def log(*args):
+    if DEBUG:
+        print(*args)
+
+
 def evaluate(state, player):
     """
     Given a board state and the player making a move, evaluates the current state of the board
@@ -153,9 +160,9 @@ def evaluate(state, player):
     score = score + e_t_s * sum(enemy_temp_safe)
     score = score + t_c * throws_left
 
-    print(state)
-    print(sum_to_attackers*attacker_proximity,closest_of_all_attackers*shyness,sum_to_targets*target_proximity,closest_of_all_targets*aggression,p_p_l*player_pieces_left,e_p_l * enemy_pieces_left,p_n_v_p * player_num_vulnerable_pieces,e_n_v_p * enemy_num_vulnerable_pieces,p_p_i * sum(player_piece_invul),e_p_i * sum(enemy_piece_invul),p_t_s * sum(player_temp_safe),e_t_s * sum(enemy_temp_safe),t_c * throws_left)
-    print(score)
+    log(state)
+    log(sum_to_attackers*attacker_proximity,closest_of_all_attackers*shyness,sum_to_targets*target_proximity,closest_of_all_targets*aggression,p_p_l*player_pieces_left,e_p_l * enemy_pieces_left,p_n_v_p * player_num_vulnerable_pieces,e_n_v_p * enemy_num_vulnerable_pieces,p_p_i * sum(player_piece_invul),e_p_i * sum(enemy_piece_invul),p_t_s * sum(player_temp_safe),e_t_s * sum(enemy_temp_safe),t_c * throws_left)
+    log(score)
 
     return score
 
@@ -164,11 +171,13 @@ def make_greedy_move(moves, state, player):
     max_score = -9999999
     greedy_move = ()
     best_moves = []
-    throw_token = "r"
-    
+    #throw_token = "r"
+    throw_conversion = {-1:"r", -2:"p", -3:"s"}
+
     for key in moves:
         possible = moves[key]
         for hex in possible:
+            """
             #pick throw token based on closest opposing player
             if (key == -1 and len(state[opponent]) != 0):
                 min_dist = 10
@@ -177,9 +186,9 @@ def make_greedy_move(moves, state, player):
                     if (dist < min_dist):
                         throw_token = no_to_piece[(piece_to_no[piece[0]] + 1) % 3]
                         min_dist = dist
-            
-            if (key == -1):
-                move = output_move(key, throw_token, hex)
+            """
+            if (key < 0):
+                move = output_move(key, throw_conversion[key], hex)
             else:
                 move = output_move(key, (state[player][key][1], state[player][key][2]), hex)
             
@@ -201,7 +210,7 @@ def make_greedy_move(moves, state, player):
     return greedy_move
 
 def output_move(piece, orig, final):
-    if piece == -1:
+    if (piece < 0):
         return ("THROW", orig, final)
     
     if (m.util.calc_dist(orig[0], orig[1], final[0], final[1]) == 1):

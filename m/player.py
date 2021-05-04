@@ -7,6 +7,8 @@ class Player:
     opponent = "lower"
     board_state = {}
 
+    DEBUG = False
+
     def __init__(self, player):
         """
         Called once at the beginning of a game to initialise this player.
@@ -34,11 +36,13 @@ class Player:
         of the game, select an action to play this turn.
         """
         moves = m.util.legal_moves(self.board_state, self.player_type)
-        print("Moves for player: " + self.player_type)
-        print(moves)
+        if self.DEBUG:
+            print("Moves for player: " + self.player_type)
+            print(moves)
 
         move = m.action.make_greedy_move(moves, self.board_state, self.player_type)
-        print("Making move: ", move)
+        if self.DEBUG:
+            print("Making move: ", move)
         return move
 
 
