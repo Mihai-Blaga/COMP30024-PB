@@ -35,12 +35,13 @@ class Player:
         Called at the beginning of each turn. Based on the current state
         of the game, select an action to play this turn.
         """
+        MAX = 9999999
         moves = m.util.legal_moves(self.board_state, self.player_type)
         if self.DEBUG:
             print("Moves for player: " + self.player_type)
             print(moves)
 
-        move = m.action.make_greedy_move(moves, self.board_state, self.player_type)
+        (move, score) = m.action.min_max(self.board_state, self.player_type, (0-MAX, MAX), 2)
         if self.DEBUG:
             print("Making move: ", move)
         return move

@@ -81,7 +81,7 @@ def legal_moves(state, player):
     Returns a list of all legal moves including throws. Format {movable_piece_num: [moves]}
     A throw is given a movable_piece_num of -1.
     """
-    print(state)
+    #print(state)
     legal_moves = adj_loc(state, player)
     throws_left = state[player + "_throws"]
 
@@ -103,7 +103,7 @@ def legal_moves(state, player):
         legal_moves[-1] = throws
         legal_moves[-2] = throws
         legal_moves[-3] = throws
-        
+
     return legal_moves
 
 def live_hex(r, q, moving_piece, original_piece):

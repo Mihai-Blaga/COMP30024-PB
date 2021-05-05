@@ -40,7 +40,7 @@ class Player:
             print("Moves for player: " + self.player_type)
             print(moves)
 
-        move = m.action.make_greedy_move(moves, self.board_state, self.player_type)
+        (move, score) = m.action.make_best_move(moves, self.board_state, self.player_type)
         if self.DEBUG:
             print("Making move: ", move)
         return move
