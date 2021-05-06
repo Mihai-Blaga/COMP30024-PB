@@ -25,18 +25,22 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 2
+DEPTH = 1
 DEBUG = False #set to TRUE if you want output for code in action.
 
 def log(*args):
     if DEBUG:
         print(*args)
 
+def temp_evaluate(state, player):
+    opponent = m.util.calculate_opponent(player)
+    return len(state[player]) + state[player + "_throws"] - len(state[opponent])
 
 def evaluate(state, player):
     """
     Given a board state and the player making a move, evaluates the current state of the board
     """
+    #return temp_evaluate(state, player)
     #setup
     opponent = m.util.calculate_opponent(player)
 
@@ -211,7 +215,22 @@ def make_best_move(moves, state, player, max = True):
 def convert(state, player, hex, key):
     #returns the move in proper format
     if (key < 0):
-        return output_move(key, throw_conversion[key], hex)
+        pieces = state[player]
+        counts = [0,0,0]
+        #count all pieces this player has
+        for p in pieces:
+            counts[piece_to_no[p[0]]] = counts[piece_to_no[p[0]]] + 1
+
+        #randomly choose counter with fewest pieces
+        best = []
+        if (counts[0] <= counts[1] and counts[0] <= counts[2]):
+            best.append(0)
+        if (counts[1] <= counts[0] and counts[1] <= counts[2]):
+            best.append(1)
+        if (counts[2] <= counts[1] and counts[2] <= counts[0]):
+            best.append(2) 
+
+        return output_move(key, no_to_piece[random.choice(best)], hex)
     else:
         return output_move(key, (state[player][key][1], state[player][key][2]), hex)
 
@@ -244,7 +263,6 @@ def paranoid_min_max(state, player):
     return min_max(state, player, (-999999, 999999), DEPTH*2)
     ...
 
-#TODO: test min_max further
 def min_max(state, player, threshold, depth, max = True):
     """
     Recursive min_max algorithm. 
@@ -262,22 +280,24 @@ def min_max(state, player, threshold, depth, max = True):
     best_moves = []
 
     if (depth == 1):
-        #depth 1 will always be a min tree
-        for key in moves:
-            possible = moves[key]
-            for hex in possible:
-                (move, score) = convert_and_score(state, mover, hex, key)
-                
-                if (score < best_score):
-                    best_moves = [move]
-                    best_score = score
-                
-                if (score == best_score):
-                    best_moves.append(move)
-                
-                if (best_score < threshold[0]):
-                    #branch has been pruned
-                    return (None, 0-MAX)
+        if (not max):
+            for key in moves:
+                possible = moves[key]
+                for hex in possible:
+                    (move, score) = convert_and_score(state, mover, hex, key)
+                    
+                    if (score < best_score):
+                        best_moves = [move]
+                        best_score = score
+                    
+                    if (score == best_score):
+                        best_moves.append(move)
+                    
+                    if (best_score < threshold[0]):
+                        #branch has been pruned
+                        break
+        else:
+            return make_best_move(moves, state, player)
 
     elif (depth > 1):
         for key in moves:
@@ -286,14 +306,6 @@ def min_max(state, player, threshold, depth, max = True):
                 #make move and update board
                 move = convert(state, mover, hex, key)
                 evaluating_state = m.update.update_board(state, move, mover)
-                if (evaluating_state == None):
-                    print("Null state?")
-                    print(moves)
-                    print(possible)
-                    print(state)
-                    print(move)
-                    print(mover)
-                    print(depth)
 
                 if (not max):
                     evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
@@ -318,9 +330,9 @@ def min_max(state, player, threshold, depth, max = True):
 
                 #check pruning conditions
                 if (max and best_score > threshold[1]):
-                    return (None, MAX)
+                    break
                 elif (not max and best_score < threshold[0]):
-                    return (None, 0-MAX)
+                    break
             
     chosen_move = random.choice(best_moves)
     return (chosen_move, best_score)

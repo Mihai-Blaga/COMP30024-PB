@@ -41,7 +41,8 @@ class Player:
             print("Moves for player: " + self.player_type)
             print(moves)
 
-        (move, score) = m.action.min_max(self.board_state, self.player_type, (0-MAX, MAX), 2)
+        (move, score) = m.action.paranoid_min_max(self.board_state, self.player_type)
+        #(move, score) = m.action.min_max(self.board_state, self.player_type, (0-MAX, MAX), 2)
         if self.DEBUG:
             print("Making move: ", move)
         return move

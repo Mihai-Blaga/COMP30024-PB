@@ -101,8 +101,6 @@ def legal_moves(state, player):
                     throws.append((i,j))
     
         legal_moves[-1] = throws
-        legal_moves[-2] = throws
-        legal_moves[-3] = throws
 
     return legal_moves
 
