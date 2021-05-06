@@ -25,7 +25,7 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 1
+DEPTH = 2
 DEBUG = False #set to TRUE if you want output for code in action.
 
 def log(*args):
@@ -40,7 +40,7 @@ def evaluate(state, player):
     """
     Given a board state and the player making a move, evaluates the current state of the board
     """
-    #return temp_evaluate(state, player)
+    return temp_evaluate(state, player)
     #setup
     opponent = m.util.calculate_opponent(player)
 
@@ -259,8 +259,8 @@ def make_random_move(moves, state, player):
 
     return move
 
-def paranoid_min_max(state, player):
-    return min_max(state, player, (-999999, 999999), DEPTH*2)
+def paranoid_min_max(state, player, d = DEPTH):
+    return min_max(state, player, (-999999, 999999), d*2)
     ...
 
 def min_max(state, player, threshold, depth, max = True):
@@ -276,31 +276,40 @@ def min_max(state, player, threshold, depth, max = True):
         mover = m.util.calculate_opponent(player)
         best_score = MAX
     moves = m.util.legal_moves(state, mover)
+    keys = reversed(moves.keys())
+    
     chosen_move = ()
     best_moves = []
 
+    log("DEPTH: ", depth, ", thresholds: ", threshold, ", max:", max)
+
     if (depth == 1):
-        if (not max):
-            for key in moves:
-                possible = moves[key]
-                for hex in possible:
-                    (move, score) = convert_and_score(state, mover, hex, key)
-                    
-                    if (score < best_score):
-                        best_moves = [move]
-                        best_score = score
-                    
-                    if (score == best_score):
-                        best_moves.append(move)
-                    
-                    if (best_score < threshold[0]):
-                        #branch has been pruned
-                        break
-        else:
-            return make_best_move(moves, state, player)
+        for key in keys:
+            possible = moves[key]
+            for hex in possible:
+                (move, score) = convert_and_score(state, mover, hex, key)
+                
+                if (not max and score < best_score):
+                    best_moves = [move]
+                    best_score = score
+                    log("score improved: ", best_score)
+                elif (max and score > best_score):
+                    best_moves = [move]
+                    best_score = score
+                    log("score improved: ", best_score)
+                elif (score == best_score):
+                    best_moves.append(move)
+                    log("score equalled: ", best_score)
+                
+                if (max and best_score >= threshold[1]):
+                    log("branch being pruned, ", best_score)
+                    break
+                elif (not max and best_score <= threshold[0]):
+                    log("branch being pruned, ", best_score)
+                    break
 
     elif (depth > 1):
-        for key in moves:
+        for key in keys:
             possible = moves[key]
             for hex in possible:
                 #make move and update board
@@ -311,27 +320,28 @@ def min_max(state, player, threshold, depth, max = True):
                     evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
 
                 if max:
-                    (best_lower_move, score) = min_max(state, player, (best_score, threshold[1]), depth-1, not max)
+                    (non_mover_move, score) = min_max(state, player, (best_score, threshold[1]), depth-1, not max)
                 if not max:
-                    (best_lower_move, score) = min_max(state, player, (threshold[0], best_score), depth-1, not max)
-
-                #checking if branch is pruned
-                if best_lower_move == None:
-                    continue
+                    (non_mover_move, score) = min_max(state, player, (threshold[0], best_score), depth-1, not max)
                 
                 if (max and score > best_score):
                     best_score = score
                     best_moves = [move]
+                    log("score improved: ", best_score)
                 elif (min and score < best_score):
                     best_score = score
                     best_moves = [move]
+                    log("score improved: ", best_score)
                 elif (best_score == score):
                     best_moves.append(move)
+                    log("score equalled: ", best_score)
 
                 #check pruning conditions
-                if (max and best_score > threshold[1]):
+                if (max and best_score >= threshold[1]):
+                    log("branch being pruned, ", best_score)
                     break
-                elif (not max and best_score < threshold[0]):
+                elif (not max and best_score <= threshold[0]):
+                    log("branch being pruned, ", best_score)
                     break
             
     chosen_move = random.choice(best_moves)

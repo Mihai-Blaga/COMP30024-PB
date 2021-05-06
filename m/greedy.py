@@ -26,8 +26,6 @@ class Player:
         #Initialising an empty board
         self.board_state = m.util.parse_json(m.util.EMPTY_JSON_PATH)
 
-        print("Initial player chosen:" + self.player_type)
-
         return
 
     def action(self):

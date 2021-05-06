@@ -9,8 +9,6 @@ def update_board(state, move, player):
     Given a board state, a move and a player, updates the internal version of the board.
     """
     board_state = copy.deepcopy(state)
-    if (board_state == None):
-        print("Maybe ran out of memory?")
     move_type = move[0]
     before = move[1]
     after = move[2]
@@ -18,16 +16,12 @@ def update_board(state, move, player):
     if (move_type == "THROW"):
         board_state[player].append((before, after[0], after[1]))
         board_state[player + "_throws"] = board_state[player + "_throws"] - 1
-        if (board_state == None):
-            print("a Returning None state")
         return board_state
 
     for i in range(0, len(board_state[player])):
         piece = board_state[player][i]
         if (piece[1] == before[0] and piece[2] == before[1]):
             board_state[player][i] = (piece[0], after[0], after[1])
-            if (board_state == None):
-                print("b Returning None state")
             return board_state
 
 def resolve_collisions(state, hex):
