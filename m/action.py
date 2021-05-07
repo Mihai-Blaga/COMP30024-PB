@@ -5,6 +5,8 @@ Utility file containing all important components for choosing an action.
 import m.util
 import m.update
 import random
+import numpy as np
+import scipy as sp
 
 #Weights for Factors
 attacker_proximity = 0  #weight for sum of closest attackers, prefer large
@@ -25,7 +27,7 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 2
+DEPTH = 1
 DEBUG = False #set to TRUE if you want output for code in action.
 
 def log(*args):
@@ -40,7 +42,7 @@ def evaluate(state, player):
     """
     Given a board state and the player making a move, evaluates the current state of the board
     """
-    return temp_evaluate(state, player)
+    #return temp_evaluate(state, player)
     #setup
     opponent = m.util.calculate_opponent(player)
 
@@ -260,92 +262,216 @@ def make_random_move(moves, state, player):
     return move
 
 def paranoid_min_max(state, player, d = DEPTH):
-    return min_max(state, player, (-999999, 999999), d*2)
-    ...
+    return serialised_min_max(state, player, (-9999999, 9999999), d*2)
 
-def min_max(state, player, threshold, depth, max = True):
+def optimistic_min_max(state, player, d = DEPTH):
+    return serialised_min_max(state, player, (-9999999, 9999999), d*2, mx = False)
+
+def serialised_min_max(state, player, threshold, depth, mx = True):
     """
-    Recursive min_max algorithm. 
+    Recursive min_max algorithm under serialised assumption. 
     Returns (NULL, 0) if branch is pruned and (move, score) otherwise.
     """
     MAX = 9999999
-    if max:
+    alpha = threshold[0]
+    beta = threshold[1]
+    if mx:
         mover = player
         best_score = 0-MAX
     else:
         mover = m.util.calculate_opponent(player)
         best_score = MAX
+        
     moves = m.util.legal_moves(state, mover)
     keys = reversed(moves.keys())
     
     chosen_move = ()
     best_moves = []
 
-    log("DEPTH: ", depth, ", thresholds: ", threshold, ", max:", max)
-
+    log("DEPTH: ", depth, ", thresholds: ", (alpha, beta), ", max:", mx)
+    
     if (depth == 1):
         for key in keys:
             possible = moves[key]
             for hex in possible:
+                #make move and evaluate score relative to player
                 (move, score) = convert_and_score(state, mover, hex, key)
                 
-                if (not max and score < best_score):
+                if (not mx and score < best_score):
                     best_moves = [move]
                     best_score = score
+                    beta = min(beta, best_score)
                     log("score improved: ", best_score)
-                elif (max and score > best_score):
+
+                elif (mx and score > best_score):
                     best_moves = [move]
                     best_score = score
+                    alpha = max(alpha, best_score)
                     log("score improved: ", best_score)
+
                 elif (score == best_score):
                     best_moves.append(move)
                     log("score equalled: ", best_score)
                 
-                if (max and best_score >= threshold[1]):
+                if (beta <= alpha):
                     log("branch being pruned, ", best_score)
                     break
-                elif (not max and best_score <= threshold[0]):
-                    log("branch being pruned, ", best_score)
-                    break
-
-    elif (depth > 1):
+                    
+    elif (depth > 0):
         for key in keys:
             possible = moves[key]
             for hex in possible:
+
                 #make move and update board
                 move = convert(state, mover, hex, key)
                 evaluating_state = m.update.update_board(state, move, mover)
+                evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
 
-                if (not max):
-                    evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
+                (next_move, score) = serialised_min_max(evaluating_state, player, (alpha, beta), depth-1, mx = not mx)
 
-                if max:
-                    (non_mover_move, score) = min_max(state, player, (best_score, threshold[1]), depth-1, not max)
-                if not max:
-                    (non_mover_move, score) = min_max(state, player, (threshold[0], best_score), depth-1, not max)
-                
-                if (max and score > best_score):
-                    best_score = score
+                if (mx and score > best_score):
+                    best_score = score 
                     best_moves = [move]
-                    log("score improved: ", best_score)
-                elif (min and score < best_score):
+                    alpha = max(alpha, best_score)
+                    #log("score improved: ", best_score)
+
+                elif (not mx and score < best_score):
                     best_score = score
-                    best_moves = [move]
-                    log("score improved: ", best_score)
+                    best_moves = [next_move]
+                    beta = min(beta, best_score)
+                    #log("score improved: ", best_score)
+
                 elif (best_score == score):
-                    best_moves.append(move)
-                    log("score equalled: ", best_score)
+                    if mx:
+                        best_moves.append(move)
+                    else:    
+                        best_moves.append(next_move)
+                    #log("score equalled: ", best_score)
 
                 #check pruning conditions
-                if (max and best_score >= threshold[1]):
-                    log("branch being pruned, ", best_score)
+                if (beta <= alpha):
+                    #log("branch being pruned, ", best_score)
                     break
-                elif (not max and best_score <= threshold[0]):
-                    log("branch being pruned, ", best_score)
-                    break
-            
+    
+    if (depth == 1):
+        log(best_moves)
+
     chosen_move = random.choice(best_moves)
     return (chosen_move, best_score)
+
+def populate_score_table(state, player, depth = 0):
+    #returns table of scores where row = player move, col = opponent move
+    opponent = m.util.calculate_opponent(player)
+    upper_moves = m.util.legal_moves(state, player)
+    lower_moves = m.util.legal_moves(state, opponent)
+
+    move_to_cols = {}
+    move_to_rows = {}
+    i = 0
+    j = 0
+
+    w = 0
+    h = 0
+
+    for k in upper_moves.keys():
+        h = h + len(upper_moves[k])
+
+    for k in lower_moves.keys():
+        w = w + len(lower_moves[k])
+
+    score_table = [[0 for x in range(w)] for y in range(h)]
+    cols_to_move = [() for x in range(w)]
+    rows_to_move = [() for x in range(h)]
+
+    for uKey in upper_moves.keys():
+        for uVal in upper_moves[uKey]:
+            
+            move_to_rows[uKey, uVal[0], uVal[1]] = i
+            rows_to_move[i] = (uKey, uVal)
+            j = 0
+            u_move = convert(state, "upper", uVal, uKey)
+
+            for lKey in lower_moves.keys():
+                for lVal in lower_moves[lKey]:
+                    
+                    if i == 0:
+                        move_to_cols[lKey, lVal[0], lVal[1]] = j
+                        cols_to_move[j] = (lKey, lVal)
+
+                    l_move = convert(state, "lower", lVal, lKey)
+                    new_board = m.update.update_board(state, l_move, "lower")
+                    new_board = m.update.update_board(new_board, u_move, "upper")
+                    score = evaluate(new_board, player)
+
+                    (score_table[i])[j] = score
+                    j = j + 1
+            i = i+1
+
+    return (score_table, cols_to_move, rows_to_move)
+
+def get_optimistic_move(score_table):
+    score_table = np.matrix(score_table)
+    ax = 1
+    
+    scores = score_table.max(ax)
+
+    return scores
+
+def get_pessimistic_move(score_table):
+    score_table = np.matrix(score_table)
+    ax = 1
+    
+    scores = score_table.min(ax)
+
+    return scores
+
+def opt_pess_bounds(state, player):
+    (table, cols_d, rows_d) = populate_score_table(state, player)
+    best = np.amax(table)
+    worst = np.amin(table)
+    return (best, worst)
+
+def populate_o_p_table(state, player):
+    opponent = m.util.calculate_opponent(player)
+    upper_moves = m.util.legal_moves(state, player)
+    lower_moves = m.util.legal_moves(state, opponent)
+
+    i = 0
+    j = 0
+
+    w = 0
+    h = 0
+
+    for k in upper_moves.keys():
+        h = h + len(upper_moves[k])
+
+    for k in lower_moves.keys():
+        w = w + len(lower_moves[k])
+
+    opt_table = [[0 for x in range(w)] for y in range(h)]
+    pess_table = [[0 for x in range(w)] for y in range(h)]
+
+    for uKey in upper_moves.keys():
+        for uVal in upper_moves[uKey]:
+            
+            j = 0
+            u_move = convert(state, "upper", uVal, uKey)
+
+            for lKey in lower_moves.keys():
+                for lVal in lower_moves[lKey]:
+
+                    l_move = convert(state, "lower", lVal, lKey)
+                    new_board = m.update.update_board(state, l_move, "lower")
+                    new_board = m.update.update_board(new_board, u_move, "upper")
+                    (o, p) = opt_pess_bounds(new_board, player)
+
+                    (opt_table[i])[j] = o
+                    (pess_table[i])[j] = p
+                    j = j + 1
+            i = i+1
+
+    return (opt_table, pess_table)
+
 
 def output_move(piece, orig, final):
     if (piece < 0):
