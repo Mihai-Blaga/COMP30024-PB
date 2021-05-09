@@ -27,8 +27,9 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 1
+DEPTH = 1.5
 DEBUG = False #set to TRUE if you want output for code in action.
+A = True
 
 def log(*args):
     if DEBUG:
@@ -262,27 +263,27 @@ def make_random_move(moves, state, player):
     return move
 
 def paranoid_min_max(state, player, d = DEPTH):
-    return serialised_min_max(state, player, (-9999999, 9999999), d*2)
+    return serialised_min_max(state, player, (-9999999, 9999999), d*2, mx = True, aggressive = A)
 
 def optimistic_min_max(state, player, d = DEPTH):
-    return serialised_min_max(state, player, (-9999999, 9999999), d*2, mx = False)
+    return serialised_min_max(state, player, (-9999999, 9999999), d*2, mx = False, aggressive = A)
 
-def serialised_min_max(state, player, threshold, depth, mx = True):
+def serialised_min_max(state, player, threshold, depth, mx = True, aggressive = False):
     """
-    Recursive min_max algorithm under serialised assumption. 
-    Returns (NULL, 0) if branch is pruned and (move, score) otherwise.
+    Recursive min_max algorithm under serialised assumption.
     """
     MAX = 9999999
     alpha = threshold[0]
     beta = threshold[1]
     if mx:
         mover = player
+        moves = m.util.legal_moves(state, mover, aggressive = aggressive)
         best_score = 0-MAX
     else:
         mover = m.util.calculate_opponent(player)
+        moves = m.util.legal_moves(state, mover, aggressive = False)
         best_score = MAX
         
-    moves = m.util.legal_moves(state, mover)
     keys = reversed(moves.keys())
     
     chosen_move = ()
@@ -327,7 +328,7 @@ def serialised_min_max(state, player, threshold, depth, mx = True):
                 evaluating_state = m.update.update_board(state, move, mover)
                 evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
 
-                (next_move, score) = serialised_min_max(evaluating_state, player, (alpha, beta), depth-1, mx = not mx)
+                (next_move, score) = serialised_min_max(evaluating_state, player, (alpha, beta), depth-1, mx = not mx, aggressive= aggressive)
 
                 if (mx and score > best_score):
                     best_score = score 
@@ -362,7 +363,7 @@ def serialised_min_max(state, player, threshold, depth, mx = True):
 def populate_score_table(state, player, depth = 0):
     #returns table of scores where row = player move, col = opponent move
     opponent = m.util.calculate_opponent(player)
-    upper_moves = m.util.legal_moves(state, player)
+    upper_moves = m.util.legal_moves(state, player, aggressive=A)
     lower_moves = m.util.legal_moves(state, opponent)
 
     move_to_cols = {}
@@ -433,7 +434,7 @@ def opt_pess_bounds(state, player):
 
 def populate_o_p_table(state, player):
     opponent = m.util.calculate_opponent(player)
-    upper_moves = m.util.legal_moves(state, player)
+    upper_moves = m.util.legal_moves(state, player, aggressive = A)
     lower_moves = m.util.legal_moves(state, opponent)
 
     i = 0

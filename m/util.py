@@ -76,7 +76,7 @@ def adj_loc(state, player):
 
     return moves
 
-def legal_moves(state, player):
+def legal_moves(state, player, aggressive = False):
     """
     Returns a list of all legal moves including throws. Format {movable_piece_num: [moves]}
     A throw is given a movable_piece_num of -1.
@@ -84,6 +84,8 @@ def legal_moves(state, player):
     #print(state)
     legal_moves = adj_loc(state, player)
     throws_left = state[player + "_throws"]
+    aggressive_width = 2
+    throw_threshold = 4
 
     upper = 4
     lower = -4
@@ -91,16 +93,20 @@ def legal_moves(state, player):
     if (throws_left > 0):
         if (player == "lower"):
             upper = (upper - throws_left) + 1
+            if aggressive:
+                lower = max(lower, upper-aggressive_width)
         if (player == "upper"):
             lower = (lower + throws_left) - 1
+            if aggressive:
+                upper = min(upper, lower+aggressive_width)
     
-        throws = []
-        for i in range(lower, upper + 1):
-            for j in range (-4, 5):
-                if (valid_hex(i,j)):
-                    throws.append((i,j))
-    
-        legal_moves[-1] = throws
+        if not aggressive or True: #len(legal_moves) < throw_threshold:
+            throws = []
+            for i in range(lower, upper + 1):
+                for j in range (-4, 5):
+                    if (valid_hex(i,j)):
+                        throws.append((i,j))
+            legal_moves[-1] = throws
 
     return legal_moves
 
