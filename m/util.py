@@ -100,7 +100,7 @@ def legal_moves(state, player, aggressive = False):
             if aggressive:
                 upper = min(upper, lower+aggressive_width)
     
-        if not aggressive or True: #len(legal_moves) < throw_threshold:
+        if not aggressive or len(legal_moves) < throw_threshold:
             throws = []
             for i in range(lower, upper + 1):
                 for j in range (-4, 5):

@@ -2,6 +2,7 @@
 Utility file containing all important components for choosing an action.
 """
 
+from m.gametheory import solve_game
 import m.util
 import m.update
 import random
@@ -12,7 +13,7 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 1
+DEPTH = 1.5
 DEBUG = False #set to TRUE if you want output for code in action.
 A = True
 
@@ -274,7 +275,7 @@ def serialised_min_max(state, player, threshold, depth, mx = True, aggressive = 
         best_score = 0-MAX
     else:
         mover = m.util.calculate_opponent(player)
-        moves = m.util.legal_moves(state, mover, aggressive = False)
+        moves = m.util.legal_moves(state, mover, aggressive = aggressive)
         best_score = MAX
         
     keys = reversed(moves.keys())
@@ -404,6 +405,19 @@ def populate_score_table(state, player):
 
     return (score_table, cols_to_move, rows_to_move)
 
+def gm_output(state, player):
+    #Attempt to build on top of the work done by Matthew Farrugia-Roberts
+    (V, col_d, row_d) = populate_score_table(state, player)
+    V = np.array(V)
+    (prob_dist, sec_level) = solve_game(V)
+    prob_dist = prob_dist.tolist()
+    rnd = np.random.choice(len(prob_dist), 1, prob_dist)
+    move = row_d[rnd[0]]
+
+    print(state, player, move[0], move[1])
+
+    return convert(state, player, move[1], move[0])
+
 def get_optimistic_move(score_table):
     score_table = np.matrix(score_table)
     ax = 1
@@ -419,6 +433,30 @@ def get_pessimistic_move(score_table):
     scores = score_table.min(ax)
 
     return scores
+
+def random_from_pessimistic(state, player):
+    (table, col_d, row_d) = populate_score_table(state, player)
+    scores = get_pessimistic_move(table).tolist()
+    scores = [x for sublist in scores for x in sublist]
+    mn = min(scores)
+
+    sum = 0
+    for i in range(len(scores)):
+        scores[i] = scores[i] - mn + 1
+        sum = sum + scores[i]
+
+    for i in range(len(scores)):
+        scores[i] = scores[i]/sum
+
+
+    log(scores)
+    rnd = np.random.choice(len(scores), 1, scores)
+    move = row_d[rnd[0]]
+
+    log(state, player, move[0], move[1])
+
+    return convert(state, player, move[1], move[0])
+
 
 def opt_pess_bounds(state, player):
     (table, cols_d, rows_d) = populate_score_table(state, player)
