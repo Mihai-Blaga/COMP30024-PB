@@ -39,9 +39,13 @@ class Player:
         if self.DEBUG:
             print("Moves for player: " + self.player_type)
             print(moves)
-        
+
+
+        #move = m.action.random_from_pessimistic(self.board_state, self.player_type)
+        #return move
+
         (move, score) = m.action.paranoid_min_max(self.board_state, self.player_type)
-        #(move2, score2) = m.action.paranoid_min_max(self.board_state, self.player_type)
+        #(move, score) = m.action.paranoid_min_max(self.board_state, self.player_type)
         #(move, score) = m.action.min_max(self.board_state, self.player_type, (0-MAX, MAX), 2)
         if self.DEBUG:
             print("Making move: ", move)
