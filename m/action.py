@@ -27,7 +27,7 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 1.5
+DEPTH = 1
 DEBUG = False #set to TRUE if you want output for code in action.
 A = True
 
@@ -263,14 +263,17 @@ def convert(state, player, hex, key):
     else:
         return output_move(key, (state[player][key][1], state[player][key][2]), hex)
 
-def convert_and_score(state, player, hex, key):
+def convert_and_score(state, player, hex, key, scorer = 0):
     #returns the best move and also scores it (move, score)
     move = convert(state, player, hex, key)
+
+    if (scorer == 0):
+        scorer = player
     
     #evaluate what would happen if this move is made
     evaluating_state = m.update.update_board(state, move, player)
     evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
-    score = evaluate(evaluating_state, player)
+    score = evaluate(evaluating_state, scorer)
 
     return (move, score)
 
@@ -322,7 +325,7 @@ def serialised_min_max(state, player, threshold, depth, mx = True, aggressive = 
             possible = moves[key]
             for hex in possible:
                 #make move and evaluate score relative to player
-                (move, score) = convert_and_score(state, mover, hex, key)
+                (move, score) = convert_and_score(state, mover, hex, key, scorer = player)
                 
                 if (not mx and score < best_score):
                     best_moves = [move]
@@ -352,7 +355,8 @@ def serialised_min_max(state, player, threshold, depth, mx = True, aggressive = 
                 #make move and update board
                 move = convert(state, mover, hex, key)
                 evaluating_state = m.update.update_board(state, move, mover)
-                evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
+                if not mx:
+                    evaluating_state = m.update.resolve_collisions(evaluating_state, hex)
 
                 (next_move, score) = serialised_min_max(evaluating_state, player, (alpha, beta), depth-1, mx = not mx, aggressive= aggressive)
 
@@ -386,7 +390,7 @@ def serialised_min_max(state, player, threshold, depth, mx = True, aggressive = 
     chosen_move = random.choice(best_moves)
     return (chosen_move, best_score)
 
-def populate_score_table(state, player, depth = 0):
+def populate_score_table(state, player):
     #returns table of scores where row = player move, col = opponent move
     opponent = m.util.calculate_opponent(player)
     upper_moves = m.util.legal_moves(state, player, aggressive=A)
@@ -478,23 +482,35 @@ def populate_o_p_table(state, player):
     opt_table = [[0 for x in range(w)] for y in range(h)]
     pess_table = [[0 for x in range(w)] for y in range(h)]
 
+    (table, col_d, row_d) = populate_score_table(state, player)
+    opt = get_optimistic_move(table)
+    pess = get_pessimistic_move(table)
+    
+    min_pess = -99999999
+    corr_opt = -99999999
+
+    for (o, p) in zip(opt, pess):
+        if min_pess < p:
+            min_pess = p
+            corr_opt = o
+
     for uKey in upper_moves.keys():
         for uVal in upper_moves[uKey]:
-            
-            j = 0
-            u_move = convert(state, "upper", uVal, uKey)
+            if opt[i] >= corr_opt:
+                j = 0
+                u_move = convert(state, "upper", uVal, uKey)
 
-            for lKey in lower_moves.keys():
-                for lVal in lower_moves[lKey]:
+                for lKey in lower_moves.keys():
+                    for lVal in lower_moves[lKey]:
 
-                    l_move = convert(state, "lower", lVal, lKey)
-                    new_board = m.update.update_board(state, l_move, "lower")
-                    new_board = m.update.update_board(new_board, u_move, "upper")
-                    (o, p) = opt_pess_bounds(new_board, player)
+                        l_move = convert(state, "lower", lVal, lKey)
+                        new_board = m.update.update_board(state, l_move, "lower")
+                        new_board = m.update.update_board(new_board, u_move, "upper")
+                        (o, p) = opt_pess_bounds(new_board, player)
 
-                    (opt_table[i])[j] = o
-                    (pess_table[i])[j] = p
-                    j = j + 1
+                        (opt_table[i])[j] = o
+                        (pess_table[i])[j] = p
+                        j = j + 1
             i = i+1
 
     return (opt_table, pess_table)

@@ -40,21 +40,7 @@ class Player:
             print("Moves for player: " + self.player_type)
             print(moves)
         
-        #(table, col_d, row_d) = m.action.populate_score_table(self.board_state, self.player_type)
-        #print("pess: ", m.action.get_pessimistic_move(table).tolist())
-        #print("opt: ", m.action.get_optimistic_move(table).tolist())
-        #(opt_table, pess_table) = m.action.populate_o_p_table(self.board_state, self.player_type)
-        
-        #print("opt: ", opt_table)
-        #print("pess: ", pess_table)
-        '''
-        optimistic = m.action.get_optimistic_move(table)
-        pessimistic = m.action.get_pessimistic_move(table)
-
-        print("optimistic: ", optimistic, col_d)
-        print("pessimistic: ", pessimistic, col_d)
-        '''
-        (move, score) = m.action.optimistic_min_max(self.board_state, self.player_type)
+        (move, score) = m.action.paranoid_min_max(self.board_state, self.player_type)
         #(move2, score2) = m.action.paranoid_min_max(self.board_state, self.player_type)
         #(move, score) = m.action.min_max(self.board_state, self.player_type, (0-MAX, MAX), 2)
         if self.DEBUG:
