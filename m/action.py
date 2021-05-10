@@ -8,21 +8,6 @@ import random
 import numpy as np
 import scipy as sp
 
-#Weights for Factors
-attacker_proximity = 0  #weight for sum of closest attackers, prefer large
-target_proximity = 0    #weight for sum of closest targets, prefer small
-aggression = -5         #weight for closest target, prefer small
-shyness = 0            #weight for closest attacker, prefer large
-p_p_l = 1
-e_p_l = 1
-p_n_v_p = 1
-e_n_v_p = 1
-p_p_i = 1
-e_p_i = 1
-p_t_s = 1
-e_t_s = 1
-t_c = 1
-
 no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
@@ -43,8 +28,6 @@ def evaluate(state, player):
     """
     Given a board state and the player making a move, evaluates the current state of the board
     """
-    #return temp_evaluate(state, player)
-    
     #setup
     opponent = m.util.calculate_opponent(player)
 
@@ -135,34 +118,26 @@ def evaluate(state, player):
 
     if closest_of_all_attackers == 10:
         closest_of_all_attackers = 0
-    #if closest_of_all_targets == 10:
-    #    closest_of_all_targets = 10
-    
+
     for piece in state[opponent]:
         closest_attacker = 10
-    #    closest_target = 10
-    #
         attacker = no_to_piece[(piece_to_no[piece[0]] + 1) % 3]
-    #    target = no_to_piece[(piece_to_no[piece[0]] - 1) % 3]
-    #
-    #    if (piece[1] < player_upper and piece[1] > player_lower):
-    #        closest_target = 1
-    #    else:
+
         for a in pieces[player][attacker]:
             dist = m.util.calc_dist(a[0],a[1],piece[1],piece[2])
             closest_attacker = min(closest_attacker, dist)
-    #    
-    #    if closest_attacker == 1:
-    #        enemy_num_vulnerable_pieces = enemy_num_vulnerable_pieces + 1
+
         if closest_attacker == 10:
             enemy_temp_safe[piece_to_no[piece[0]]] = 1
-     #       if throws_left == 0:
-    #            enemy_piece_invul[piece_to_no[piece[0]]] = 1
 
-    #sum_to_targets = sum_to_targets + closest_target
+    if player_pieces_left == 0 and enemy_pieces_left == 0:
+        score = 50
+    elif player_pieces_left == 0:
+        score = -1000
+    elif enemy_pieces_left == 0:
+        score = 1000
     
-
-    if enemy_pieces_left == 1 and sum(player_piece_invul) > 0:
+    elif enemy_pieces_left == 1 and sum(player_piece_invul) > 0:
         if sum(enemy_piece_invul) == 0:
             score = 1000
         else:
@@ -173,13 +148,8 @@ def evaluate(state, player):
         score = 50 + 20*(player_pieces_left + throws_left - enemy_pieces_left  - enemy_throws_left) + 2*(9 - closest_of_all_targets) + 15*throws_left -5*(sum(enemy_temp_safe))
         if closest_of_all_attackers == 1:
             score = score - 5
-        #score = 50 + 20*(player_pieces_left + throws_left - enemy_pieces_left  - enemy_throws_left) + 2*(9 - closest_of_all_targets) + 15*throws_left -5*(sum(enemy_temp_safe))
 
-        
-    #print(state)
-    #print(score)
     log(state)
-    #log(sum_to_attackers*attacker_proximity,closest_of_all_attackers*shyness,sum_to_targets*target_proximity,closest_of_all_targets*aggression,p_p_l*player_pieces_left,e_p_l * enemy_pieces_left,p_n_v_p * player_num_vulnerable_pieces,e_n_v_p * enemy_num_vulnerable_pieces,p_p_i * sum(player_piece_invul),e_p_i * sum(enemy_piece_invul),p_t_s * sum(player_temp_safe),e_t_s * sum(enemy_temp_safe),t_c * throws_left)
     log(score)
 
     return score
@@ -251,14 +221,6 @@ def convert(state, player, hex, key):
                 best = [i]
             i = i + 1
         
-
-        #if (counts_player[0] <= counts[1] and counts[0] <= counts[2]):
-        #    best.append(0)
-        #if (counts[1] <= counts[0] and counts[1] <= counts[2]):
-        #    best.append(1)
-        #if (counts[2] <= counts[1] and counts[2] <= counts[0]):
-        #    best.append(2) 
-
         return output_move(key, no_to_piece[random.choice(best)], hex)
     else:
         return output_move(key, (state[player][key][1], state[player][key][2]), hex)
@@ -284,8 +246,10 @@ def make_random_move(moves, state, player):
     key = random.choice(list(moves.keys()))
     hex = random.choice(moves[key])
 
+    piece_id = random.randrange(3) - 3
+
     if (key < 0):
-        move = output_move(key, throw_conversion[key], hex)
+        move = output_move(key, throw_conversion[piece_id], hex)
     else:   
         move = output_move(key, (state[player][key][1], state[player][key][2]), hex)
 
