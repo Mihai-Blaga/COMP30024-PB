@@ -13,9 +13,9 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 1
+DEPTH = 1.5
 DEBUG = False #set to TRUE if you want output for code in action.
-A = False
+A = True
 
 def log(*args):
     if DEBUG:
@@ -169,17 +169,7 @@ def make_best_move(moves, state, player, max = True):
     for key in moves:
         possible = moves[key]
         for hex in possible:
-            """
-            opponent = m.util.calculate_opponent(player)
-            #   picking throw token based on closest opposing player
-            if (key == -1 and len(state[opponent]) != 0):
-                min_dist = 10
-                for piece in state[opponent]:
-                    dist = m.util.calc_dist(hex[0], hex[1], piece[1], piece[2])
-                    if (dist < min_dist):
-                        throw_token = no_to_piece[(piece_to_no[piece[0]] + 1) % 3]
-                        min_dist = dist
-            """
+            
             (move, score) = convert_and_score(state, player, hex, key)
             
             if (best_score == 0-MAX) or (best_score == MAX):
@@ -278,8 +268,9 @@ def serialised_min_max(state, player, threshold, depth, mx = True, aggressive = 
         moves = m.util.legal_moves(state, mover, aggressive = aggressive)
         best_score = MAX
         
-    keys = reversed(moves.keys())
-    
+    #keys = reversed(moves.keys())
+    keys = moves.keys()
+
     chosen_move = ()
     best_moves = []
 
