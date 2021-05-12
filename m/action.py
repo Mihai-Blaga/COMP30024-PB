@@ -13,9 +13,9 @@ no_to_piece = {0: "r", 1: "p", 2: "s"}
 piece_to_no = {"r": 0, "p": 1, "s": 2}
 throw_conversion = {-1:"r", -2:"p", -3:"s"}
 
-DEPTH = 1.5
+DEPTH = 1
 DEBUG = False #set to TRUE if you want output for code in action.
-A = True
+A = False
 
 def log(*args):
     if DEBUG:
